@@ -1,0 +1,55 @@
+I'm glad you asked. I can help you create a google sheet that enables you to plug in the variables for 18 holes for this formula. Here is a python script that can do that for you:
+
+```python
+# This is a python script that can create a google sheet with the formulas for uphill and downhill putts
+# You will need to install gspread and oauth2client libraries to run this script
+# You will also need to enable the Google Sheets API and get a credentials.json file from https://developers.google.com/sheets/api/quickstart/python
+
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+
+# Define the constants for different green speeds
+CSG_M = 0.5 # slope coefficient for casual speed greens
+CSG_B = 0.1 # intercept for casual speed greens
+TSG_M = 0.7 # slope coefficient for tournament speed greens
+TSG_B = 0.15 # intercept for tournament speed greens
+VFG_M = 0.9 # slope coefficient for very fast greens
+VFG_B = 0.2 # intercept for very fast greens
+
+# Define the scope and credentials for accessing the google sheet
+scope = ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']
+credentials = ServiceAccountCredentials.from_json_keyfile_name('credentials.json', scope)
+gc = gspread.authorize(credentials)
+
+# Create a new google sheet and get the first worksheet
+sh = gc.create('Putt Calculator')
+ws = sh.get_worksheet(0)
+
+# Set the headers for the worksheet
+ws.update('A1', 'Hole')
+ws.update('B1', 'Elevation (inches)')
+ws.update('C1', 'Distance (feet)')
+ws.update('D1', 'Uphill Putt (feet) - CSG')
+ws.update('E1', 'Uphill Putt (feet) - TSG')
+ws.update('F1', 'Uphill Putt (feet) - VFG')
+ws.update('G1', 'Downhill Putt (feet) - CSG')
+ws.update('H1', 'Downhill Putt (feet) - TSG')
+ws.update('I1', 'Downhill Putt (feet) - VFG')
+
+# Loop through the 18 holes and set the formulas for each row
+for i in range(2, 20):
+  hole = i - 1 # the hole number
+  ws.update(f'A{i}', hole) # write the hole number in column A
+  ws.update(f'D{i}', f'=C{i}*(({CSG_M}*B{i}/(12*C{i}))+{CSG_B})+1') # write the formula for uphill putt with CSG in column D
+  ws.update(f'E{i}', f'=C{i}*(({TSG_M}*B{i}/(12*C{i}))+{TSG_B})+1') # write the formula for uphill putt with TSG in column E
+  ws.update(f'F{i}', f'=C{i}*(({VFG_M}*B{i}/(12*C{i}))+{VFG_B})+1') # write the formula for uphill putt with VFG in column F
+  ws.update(f'G{i}', f'=C{i}*(({CSG_M}*-B{i}/(12*C{i}))+{CSG_B})') # write the formula for downhill putt with CSG in column G
+  ws.update(f'H{i}', f'=C{i}*(({TSG_M}*-B{i}/(12*C{i}))+{TSG_B})') # write the formula for downhill putt with TSG in column H
+  ws.update(f'I{i}', f'=C{i}*(({VFG_M}*-B{i}/(12*C{i}))+{VFG_B})') # write the formula for downhill putt with VFG in column I
+
+# Share the google sheet with your email address and give yourself edit access
+sh.share('your_email_address_here', perm_type='user', role='writer')
+
+# Print the link to the google sheet
+print(f'Here is your google sheet: {sh.url}')
+```
